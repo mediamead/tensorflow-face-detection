@@ -172,9 +172,7 @@ def send_event(image, meta, event):
         #image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
         #image = cv2.resize(image, (640, 480))  # resize the frame        
 
-        # FIXME: send meta upstream
-
-        # serialize image and send upstream
-        data = pickle.dumps(image)
+        # serialize metadata, event, and image and send upstream
+        data = pickle.dumps([meta, event, image])
         message_size = struct.pack("L", len(data)) ### CHANGED
         clientsocket.sendall(message_size + data)

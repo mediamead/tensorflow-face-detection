@@ -38,8 +38,8 @@ while True:
     frame_data = data[:msg_size]
     data = data[msg_size:]
 
-    # Extract frame
-    frame = pickle.loads(frame_data)
+    # Extract the message
+    [meta, event, frame] = pickle.loads(frame_data)
 
     # Display
     cv2.imshow('frame', frame)
