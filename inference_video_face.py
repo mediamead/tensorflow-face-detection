@@ -9,6 +9,8 @@ import numpy as np
 import tensorflow as tf
 import cv2
 
+import planb
+
 sys.path.append("..")
 
 from utils import label_map_util
@@ -34,6 +36,8 @@ def load_image_into_numpy_array(image):
 
 cap = cv2.VideoCapture("./media/test.mp4")
 out = None
+
+planb.connect_upstream()
 
 detection_graph = tf.Graph()
 with detection_graph.as_default():
@@ -61,6 +65,11 @@ with detection_graph.as_default():
 
       image_np = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
+      meta = { 'frameCounter': -1 } # FIXME
+      if not planb.process_image(image_np, meta):
+          # skip bounding box detection
+          continue
+
       # the array based representation of the image will be used later in order to prepare the
       # result image with boxes and labels on it.
       # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
@@ -79,7 +88,10 @@ with detection_graph.as_default():
           [boxes, scores, classes, num_detections],
           feed_dict={image_tensor: image_np_expanded})
       elapsed_time = time.time() - start_time
-      print('inference time cost: {}'.format(elapsed_time))
+      #print('inference time cost: {}'.format(elapsed_time))
+
+      planb.process_boxes(image_np, meta, boxes[0], scores[0])
+
       #print(boxes.shape, boxes)
       #print(scores.shape,scores)
       #print(classes.shape,classes)

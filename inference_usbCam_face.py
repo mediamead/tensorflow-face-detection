@@ -9,6 +9,8 @@ import numpy as np
 import tensorflow as tf
 import cv2
 
+import planb
+
 from utils import label_map_util
 from utils import visualization_utils_color as vis_util
 
@@ -89,6 +91,8 @@ if __name__ == "__main__":
     
     tDetector = TensoflowFaceDector(PATH_TO_CKPT)
 
+    planb.connect_upstream()
+
     cap = cv2.VideoCapture(camID)
     windowNotSet = True
     while True:
@@ -98,9 +102,17 @@ if __name__ == "__main__":
 
         [h, w] = image.shape[:2]
         print (h, w)
+
+        meta = {}
+        if not planb.process_image(image, meta):
+            # skip bounding box detection
+            continue
+
         image = cv2.flip(image, 1)
 
         (boxes, scores, classes, num_detections) = tDetector.run(image)
+
+        planb.process_boxes(image, meta, boxes[0], scores[0])
 
         vis_util.visualize_boxes_and_labels_on_image_array(
             image,
