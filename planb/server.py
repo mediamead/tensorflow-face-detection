@@ -3,6 +3,7 @@ import socket
 import struct
 
 import cv2
+import numpy as np
 
 HOST = ''
 PORT = 8089
@@ -20,6 +21,8 @@ print('Connection accepted')
 
 data = b'' ### CHANGED
 payload_size = struct.calcsize("L") ### CHANGED
+
+kernel = np.ones((5,5),np.float32)/25
 
 while True:
 
@@ -40,6 +43,24 @@ while True:
 
     # Extract the message
     [meta, event, frame] = pickle.loads(frame_data)
+    #event['camera_moves']
+    if event['target_locked']:
+        # apply smoothing filter
+        frame = cv2.filter2D(frame, -1, kernel)        
+
+        if 'target_box' in event:
+            # target box is found: draw the box
+            # convert coordinates of the bounding box to pixels
+            height, width, _ = frame.shape
+            [y1, x1, y2, x2] = event['target_box']
+            x1 = int(x1 * width)
+            y1 = int(y1 * height)
+            x2 = int(x2 * width)
+            y2 = int(y2 * height)
+            # draw a box
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (255,0,0), 2)
+    else:
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     # Display
     cv2.imshow('frame', frame)
