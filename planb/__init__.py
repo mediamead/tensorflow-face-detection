@@ -1,5 +1,6 @@
 import cv2
 import math
+import numpy as np
 
 import logging
 logger = logging.getLogger('planb')
@@ -32,11 +33,31 @@ def process_boxes(image, meta, boxes, scores):
 
 # ============================================================================
 
+prvs = None
+hsv = None
+
 def is_camera_moving(image, meta):
-    # Compare optical flow between the given image and previous one,
-    # tell between some object moving vs all object drifting
+    # Tell between some object moving vs all object drifting
     # Return True if we think camera is moving
     # FIXME-1: implement camera movement detection
+
+    # https://docs.opencv.org/ref/master/d4/dee/tutorial_optical_flow.html    
+    global prvs, hsv
+    if prvs is None or hsv is None:
+        prvs = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
+        hsv = np.zeros_like(image)
+        hsv[...,1] = 255
+    
+    next = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    flow = cv2.calcOpticalFlowFarneback(prvs, next, None, 0.5, 3, 15, 3, 5, 1.2, 0)
+    mag, ang = cv2.cartToPolar(flow[...,0], flow[...,1])
+    hsv[...,0] = ang*180/np.pi/2
+    hsv[...,2] = cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX)
+    bgr = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+    prvs = next
+
+    cv2.imshow('frame2',bgr)
+
     return False
 
 # ============================================================================
