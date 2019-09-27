@@ -84,14 +84,14 @@ def usage():
     exit(1)
 
 import profiler
-profiler = profiler.Profiler()
 
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--rotate", action='store_true', help="rotate clockwise for NN processing")
     parser.add_argument("-f", "--stream_frames", action='store_true', help="send encoded frames upstream")
-    parser.add_argument("-n", "--no_visual", action='store_false', help="visualize")
+    parser.add_argument("-n", "--no_visual", action='store_true', help="visualize")
+    parser.add_argument("-p", "--profiling", action='store_true', help="create profiler.csv")
     parser.add_argument("camera", help="camera | file")
     parser.add_argument("upstream", help="port number | file")
     args = parser.parse_args()
@@ -109,6 +109,11 @@ if __name__ == "__main__":
         # else port == 0: do nothing
     else:
         pb.upstream.open_file(args.upstream, stream_frames=args.stream_frames)
+
+    if args.profiling:
+        profiler = profiler.Profiler()
+    else:
+        profiler = None
     
     tDetector = TensoflowFaceDector(PATH_TO_CKPT)
 
@@ -170,8 +175,10 @@ if __name__ == "__main__":
             print("Visualize = %s" % visualize)
 
         t[5] = time.time()
-        profiler.report(t)
+        if profiler:
+            profiler.report(t)
 
-    profiler.close()
+    if profiler:
+        profiler.close()
     pb.upstream.close()
     cap.release()
