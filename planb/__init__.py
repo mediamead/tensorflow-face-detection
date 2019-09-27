@@ -60,7 +60,7 @@ class PlanB:
 
     def unrotate(self, box):
         [x1, y1, x2, y2] = box
-        return [y2, x2, y1, x1]
+        return [1-y2, x2, 1-y1, x1]
 
     def run(self, image, meta, boxes, scores):
         # how many seconds passed since the start of the cycle
