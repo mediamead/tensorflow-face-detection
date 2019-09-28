@@ -193,13 +193,9 @@ class PlanB:
     # ====================================================================================================
 
     def show_info(self, frame):
-        # Put status attributes on the image
-        def putText(row, text):
-            scale = 1
-            cv2.putText(frame, text, (0, int(25*row*scale)), cv2.FONT_HERSHEY_SIMPLEX, scale, (0,0,255))
-        
         elapsed = (time.time() - self.start_time) % self.move_period
-        putText(1, 'elapsed=%.2f' % elapsed)
-        putText(2, 'mode=%s' % self.mode)
+        print('elapsed=%5.2f' % elapsed, end=' ')
+        print('mode=%12s' % self.mode, end=' ')
         if self.mode == Mode.EFFECT_START or self.mode == Mode.EFFECT_RUN or self.mode == Mode.EFFECT_ABORT:
-            putText(3, 'mode_remains=%.2f' % (self.mode_endtime - time.time()))
+            print('mode_remains=%.2f' % (self.mode_endtime - time.time()), end='')
+        print()
