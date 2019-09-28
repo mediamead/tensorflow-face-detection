@@ -130,6 +130,8 @@ if __name__ == "__main__":
         pb.run(image, meta, boxes[0], scores[0])
         t[4] = time.time()
 
+        pb.show_info(image)
+
         if visualize:
             vis_util.visualize_boxes_and_labels_on_image_array(
                 image,
@@ -145,7 +147,6 @@ if __name__ == "__main__":
                 windowName = "tensorflow based (%d, %d)" % (w, h)
                 cv2.namedWindow(windowName, cv2.WINDOW_NORMAL)
                 
-            pb.show_info(image)
             cv2.imshow(windowName, image)
 
         k = cv2.waitKey(1) & 0xff
