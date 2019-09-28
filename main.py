@@ -75,14 +75,6 @@ class TensoflowFaceDector(object):
 
         return (boxes, scores, classes, num_detections)
 
-def usage():
-    print("")
-    print("Usage: %s cameraID (upstream-port|upstream-file)")
-    print("    %s 0 0" % (sys.argv[0]))
-    print("    %s 0 8089" % (sys.argv[0]))
-    print("    %s 0 upstream.json" % (sys.argv[0]))
-    exit(1)
-
 import profiler
 
 if __name__ == "__main__":
@@ -91,24 +83,17 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--rotate", action='store_true', help="rotate clockwise for NN processing")
     parser.add_argument("-f", "--stream_frames", action='store_true', help="send encoded frames upstream")
     parser.add_argument("-n", "--no_visual", action='store_true', help="visualize")
-    parser.add_argument("-p", "--profiling", action='store_true', help="create profiler.csv")
-    parser.add_argument("camera", help="camera | file")
-    parser.add_argument("upstream", help="port number | file")
+    parser.add_argument("-p", "--port", type=int, default=8089, help="upstream port")
+    parser.add_argument("-P", "--profiling", action='store_true', help="create profiler.csv")
+    parser.add_argument("-c", "--camera", type=int, default=0, help="camera id")
     args = parser.parse_args()
 
     pb = planb.PlanB(args)
 
-    if not args.camera.isdigit():
-        usage()
-    camID = int(args.camera)
-
-    if args.upstream.isdigit():
-        port = int(args.upstream)
-        if port > 0:
-            pb.upstream.connect_socket('localhost', port, stream_frames=args.stream_frames)
-        # else port == 0: do nothing
-    else:
-        pb.upstream.open_file(args.upstream, stream_frames=args.stream_frames)
+    if args.port > 0:
+        pb.upstream.connect_socket('localhost', args.port, stream_frames=args.stream_frames)
+    #else: FIXME
+    #    pb.upstream.open_file(args.upstream, stream_frames=args.stream_frames)
 
     if args.profiling:
         profiler = profiler.Profiler()
@@ -117,8 +102,8 @@ if __name__ == "__main__":
     
     tDetector = TensoflowFaceDector(PATH_TO_CKPT)
 
-    cap = cv2.VideoCapture(camID)
-    #cap.set(cv2.CAP_PROP_AUTOFOCUS, 0) # turn the autofocus off
+    cap = cv2.VideoCapture(args.camera)
+    cap.set(cv2.CAP_PROP_AUTOFOCUS, 0) # turn the autofocus off
     #cap.set(cv2.CAP_PROP_FPS, 30)
     
     windowName = None
