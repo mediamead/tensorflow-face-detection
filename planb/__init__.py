@@ -121,6 +121,15 @@ class PlanB:
         
         if self.mode == Mode.EFFECT_RUN:
             if time.time() < self.mode_endtime:
+                [i, _] = self.find_locked_target(image, meta, boxes, scores)
+                if i is None:
+                    return # end of processing
+
+                if self.args.rotate:
+                    box = self.unrotate(boxes[i].tolist())
+                else:
+                    box = boxes[i].tolist()
+                self.upstream.send_effect_run(image, meta, box)
                 return # end of processing
 
             self.mode = Mode.EFFECT_ABORT
@@ -186,8 +195,8 @@ class PlanB:
     def show_info(self, frame):
         # Put status attributes on the image
         def putText(row, text):
-            scale = 0.5
-            cv2.putText(frame, text, (0, int(25*row*scale)), cv2.FONT_HERSHEY_SIMPLEX, scale, 128)
+            scale = 1
+            cv2.putText(frame, text, (0, int(25*row*scale)), cv2.FONT_HERSHEY_SIMPLEX, scale, (0,0,255))
         
         elapsed = (time.time() - self.start_time) % self.move_period
         putText(1, 'elapsed=%.2f' % elapsed)
