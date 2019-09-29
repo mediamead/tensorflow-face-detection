@@ -192,9 +192,22 @@ class PlanB:
 
     # ====================================================================================================
 
+    NFRAMES = 100
+    nframes = 0
+    nframes_time = None
+    fps = -1
+
     def show_info(self, frame):
+        self.nframes = self.nframes - 1
+        if self.nframes <= 0:
+            now = time.time()
+            if self.nframes_time is not None:
+                self.fps = self.NFRAMES / (now - self.nframes_time)
+            self.nframes_time = now
+            self.nframes = self.NFRAMES
+
         elapsed = (time.time() - self.start_time) % self.move_period
-        print('elapsed=%5.2f' % elapsed, end=' ')
+        print('fps=%5.2f elapsed=%5.2f' % (self.fps, elapsed), end=' ')
         print('mode=%12s' % self.mode, end=' ')
         if self.mode == Mode.EFFECT_START or self.mode == Mode.EFFECT_RUN or self.mode == Mode.EFFECT_ABORT:
             print('mode_remains=%.2f' % (self.mode_endtime - time.time()), end='')
