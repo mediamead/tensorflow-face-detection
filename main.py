@@ -86,6 +86,8 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--port", type=int, default=8089, help="upstream port")
     parser.add_argument("-P", "--profiling", action='store_true', help="create profiler.csv")
     parser.add_argument("-c", "--camera", type=int, default=0, help="camera id")
+    parser.add_argument("-s", "--skip", type=int, default=2, help="skip so many frames")
+
     args = parser.parse_args()
 
     pb = planb.PlanB(args)
@@ -103,12 +105,12 @@ if __name__ == "__main__":
     tDetector = TensoflowFaceDector(PATH_TO_CKPT)
 
     cap = cv2.VideoCapture(args.camera)
-    cap.set(cv2.CAP_PROP_AUTOFOCUS, 0) # turn the autofocus off
-    #cap.set(cv2.CAP_PROP_FPS, 30)
+    #cap.set(cv2.CAP_PROP_AUTOFOCUS, 0) # turn the autofocus off
     
     windowName = None
     visualize = not args.no_visual
 
+    nframe = 0
     while True:
         t = [time.time(), 0, 0, 0, 0, 0]
 
@@ -117,6 +119,13 @@ if __name__ == "__main__":
             break
         t[1] = time.time()
 
+        # skip
+        if nframe > 0:
+            nframe = nframe - 1
+            continue
+        else:
+            nframe = args.skip
+       
         meta = {}
 
         if args.rotate:
