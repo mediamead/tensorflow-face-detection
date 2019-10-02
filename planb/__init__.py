@@ -38,6 +38,8 @@ class PlanB:
 
     box_score_threshold_detection = 0.8
     box_score_threshold_tracking = 0.5
+    max_distance = 100 # max distance between face on consecutive frames
+    max_ndrops = 3
 
     move_period = 10
     move_duration = 3
@@ -108,6 +110,8 @@ class PlanB:
                     self.mode_endtime = time.time() + self.T3
                     self.upstream.send_effect_abort(image, meta, [self.T3]) 
                     return # end of processing
+                if i < 0:
+                    return # temporary face loss, do nothing
 
                 if self.args.rotate:
                     box = self.unrotate(boxes[i].tolist())
@@ -124,7 +128,12 @@ class PlanB:
             if time.time() < self.mode_endtime:
                 [i, _] = self.find_locked_target(image, meta, boxes, scores)
                 if i is None:
+                    self.mode = Mode.EFFECT_ABORT
+                    self.mode_endtime = time.time() + self.T3
+                    self.upstream.send_effect_abort(image, meta, [self.T3]) 
                     return # end of processing
+                if i < 0:
+                    return # temporary face loss, do nothing
 
                 if self.args.rotate:
                     box = self.unrotate(boxes[i].tolist())
@@ -166,6 +175,7 @@ class PlanB:
                 best_box_sq = sq
 
         if best_box_i is not None:
+            self.ndrops = 0
             self.target = { 'box': boxes[best_box_i] }
 
         return [best_box_i, best_box_sq]
@@ -182,12 +192,22 @@ class PlanB:
     
             box = boxes[i]
             distance = _get_box_distance(self.target['box'], box)
+            if distance > self.max_distance:
+                continue # ignore faces too far from the expected location
+
             if distance < closest_box_distance:
                 closest_box_i = i
                 closest_box_distance = distance
 
         if closest_box_i is not None:
+            self.ndrops = 0
             self.target = { 'box': boxes[closest_box_i] }
+        else:
+            # face not found
+            self.ndrops = self.ndrops + 1
+            if self.ndrops < self.max_ndrops:
+                # face not found, but only few drops so far
+                closest_box_i = -1
 
         return [closest_box_i, closest_box_distance]
 
