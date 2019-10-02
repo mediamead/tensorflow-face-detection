@@ -36,7 +36,8 @@ class Mode(Enum):
 class PlanB:
     mode = Mode(Mode.IDLE)
 
-    box_score_threshold = 0.8
+    box_score_threshold_detection = 0.8
+    box_score_threshold_tracking = 0.5
 
     move_period = 10
     move_duration = 3
@@ -154,7 +155,7 @@ class PlanB:
         best_box_sq = 0
 
         for i in range(len(boxes)):
-            if scores[i] < self.box_score_threshold:
+            if scores[i] < self.box_score_threshold_detection:
                 # ignore low-certainty faces
                 continue
     
@@ -175,7 +176,7 @@ class PlanB:
         closest_box_distance = float('inf')
 
         for i in range(len(boxes)):
-            if scores[i] < self.box_score_threshold:
+            if scores[i] < self.box_score_threshold_tracking:
                 # ignore low-certainty faces
                 continue
     
