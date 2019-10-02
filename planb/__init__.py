@@ -35,11 +35,12 @@ class Mode(Enum):
 
 class PlanB:
     mode = Mode(Mode.IDLE)
+    mode_endtime = None
 
-    box_score_threshold_detection = 0.8
-    box_score_threshold_tracking = 0.5
+    box_score_threshold_detection = 0.8 # min acceptable score during initial detection
+    box_score_threshold_tracking = 0.5 # min acceptable score during tracking
     max_distance = 100 # max distance between face on consecutive frames
-    max_ndrops = 3
+    max_ndrops = 3 # max number of dropped frames before tracking failure
 
     move_period = 10
     move_duration = 3
@@ -154,6 +155,7 @@ class PlanB:
                 self.mode = Mode.MOVING
             else:
                 self.mode = Mode.IDLE
+            self.mode_endtime = None
             return # end of processing
 
     # ============================================================================
@@ -228,8 +230,9 @@ class PlanB:
             self.nframes = self.NFRAMES
 
         elapsed = (time.time() - self.start_time) % self.move_period
-        print('fps=%5.2f elapsed=%5.2f' % (self.fps, elapsed), end=' ')
-        print('mode=%12s' % self.mode, end=' ')
-        if self.mode == Mode.EFFECT_START or self.mode == Mode.EFFECT_RUN or self.mode == Mode.EFFECT_ABORT:
-            print('mode_remains=%.2f' % (self.mode_endtime - time.time()), end='')
+        print('fps=%5.2f elapsed=%5.2f mode=%12s' % (self.fps, elapsed, self.mode), end=' ')
+        if self.mode_endtime is not None:
+            print(' mode_remains=%.2f' % (self.mode_endtime - time.time()), end='')
+        if self.mode == Mode.EFFECT_START or self.mode == Mode.EFFECT_RUN:
+            print(' ndrops=%d' % (self.ndrops), end='')
         print()
