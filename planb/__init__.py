@@ -1,11 +1,14 @@
+from enum import Enum
 import cv2
 import math
 import time
 
 from planb.upstream import Upstream
+from keras_mask_rcnn import PersonDetector
 
 import logging
 logger = logging.getLogger('planb')
+
 
 def _get_box_distance(box1, box2):
     # return distance between the centers of the boxes
@@ -17,15 +20,20 @@ def _get_box_distance(box1, box2):
     dy = box1_cy - box2_cy
     return math.sqrt(dx*dx + dy*dy)
 
+
 def _get_box_sq(box):
     # return distance between the centers of the boxes
     box_w = box[2] - box[0]
     box_h = box[3] - box[1]
     return math.fabs(box_w * box_h)
 
+
+def _get_face_image(image, box):
+    return image  # FIXME
+
 # ========================================================================================================
 
-from enum import Enum
+
 class Mode(Enum):
     MOVING = 1
     IDLE = 2
@@ -33,14 +41,16 @@ class Mode(Enum):
     EFFECT_RUN = 4
     EFFECT_ABORT = 5
 
+
 class PlanB:
     mode = Mode(Mode.IDLE)
     mode_endtime = None
 
-    box_score_threshold_detection = 0.8 # min acceptable score during initial detection
-    box_score_threshold_tracking = 0.5 # min acceptable score during tracking
-    max_distance = 100 # max distance between face on consecutive frames
-    max_ndrops = 3 # max number of dropped frames before tracking failure
+    # min acceptable score during initial detection
+    box_score_threshold_detection = 0.8
+    box_score_threshold_tracking = 0.5  # min acceptable score during tracking
+    max_distance = 100  # max distance between face on consecutive frames
+    max_ndrops = 3  # max number of dropped frames before tracking failure
 
     move_period = 10
     move_duration = 3
@@ -54,6 +64,11 @@ class PlanB:
         self.target = None
         self.start_time = time.time()
         self.args = args
+
+        if not args.no_face_contour:
+            self.pd = PersonDetector()
+        else:
+            self.pd = None
 
     # ============================================================================
 
@@ -77,7 +92,7 @@ class PlanB:
         if self.mode == Mode.MOVING:
             if moving:
                 # still moving
-                return # end of processing
+                return  # end of processing
             else:
                 self.mode = Mode.IDLE
                 # fall through
@@ -86,22 +101,29 @@ class PlanB:
             if moving:
                 # started to move
                 self.mode = Mode.MOVING
-                return # end of processing
+                return  # end of processing
 
             [i, _] = self.find_best_target(image, meta, boxes, scores)
             if i is None:
-                return # end of processing
+                return  # end of processing
 
             # new face found
-            self.mode = Mode.EFFECT_START
-            self.mode_endtime = time.time() + self.T1
-
             if self.args.rotate:
                 box = self.unrotate(boxes[i].tolist())
             else:
                 box = boxes[i].tolist()
-            self.upstream.send_effect_start(image, meta, box, [self.T1, self.T2, self.T3])
-            return # end of processing
+            self.upstream.send_effect_start(
+                image, meta, box, [self.T1, self.T2, self.T3])
+
+            if self.pd is not None:
+                # take area slightly larger than the face bounding box and find person there
+                face_image = _get_face_image(image, box)
+                face_image = self.pd.get_person_image(face_image)
+                self.upstream.send_face(face_image)
+
+            self.mode = Mode.EFFECT_START
+            self.mode_endtime = time.time() + self.T1
+            return  # end of processing
 
         if self.mode == Mode.EFFECT_START:
             if time.time() < self.mode_endtime:
@@ -109,54 +131,54 @@ class PlanB:
                 if i is None:
                     self.mode = Mode.EFFECT_ABORT
                     self.mode_endtime = time.time() + self.T3
-                    self.upstream.send_effect_abort(image, meta, [self.T3]) 
-                    return # end of processing
+                    self.upstream.send_effect_abort(image, meta, [self.T3])
+                    return  # end of processing
                 if i < 0:
-                    return # temporary face loss, do nothing
+                    return  # temporary face loss, do nothing
 
                 if self.args.rotate:
                     box = self.unrotate(boxes[i].tolist())
                 else:
                     box = boxes[i].tolist()
                 self.upstream.send_effect_run(image, meta, box)
-                return # end of processing
-                
+                return  # end of processing
+
             self.mode = Mode.EFFECT_RUN
             self.mode_endtime = time.time() + self.T2
             # fall through
-        
+
         if self.mode == Mode.EFFECT_RUN:
             if time.time() < self.mode_endtime:
                 [i, _] = self.find_locked_target(image, meta, boxes, scores)
                 if i is None:
                     self.mode = Mode.EFFECT_ABORT
                     self.mode_endtime = time.time() + self.T3
-                    self.upstream.send_effect_abort(image, meta, [self.T3]) 
-                    return # end of processing
+                    self.upstream.send_effect_abort(image, meta, [self.T3])
+                    return  # end of processing
                 if i < 0:
-                    return # temporary face loss, do nothing
+                    return  # temporary face loss, do nothing
 
                 if self.args.rotate:
                     box = self.unrotate(boxes[i].tolist())
                 else:
                     box = boxes[i].tolist()
                 self.upstream.send_effect_run(image, meta, box)
-                return # end of processing
+                return  # end of processing
 
             self.mode = Mode.EFFECT_ABORT
             self.mode_endtime = time.time() + self.T3
-            return # end of processing
+            return  # end of processing
 
         if self.mode == Mode.EFFECT_ABORT:
             if time.time() < self.mode_endtime:
-                return # end of processing
+                return  # end of processing
 
             if moving:
                 self.mode = Mode.MOVING
             else:
                 self.mode = Mode.IDLE
             self.mode_endtime = None
-            return # end of processing
+            return  # end of processing
 
     # ============================================================================
 
@@ -169,7 +191,7 @@ class PlanB:
             if scores[i] < self.box_score_threshold_detection:
                 # ignore low-certainty faces
                 continue
-    
+
             box = boxes[i]
             sq = _get_box_sq(box)
             if sq > best_box_sq:
@@ -178,7 +200,7 @@ class PlanB:
 
         if best_box_i is not None:
             self.ndrops = 0
-            self.target = { 'box': boxes[best_box_i] }
+            self.target = {'box': boxes[best_box_i]}
 
         return [best_box_i, best_box_sq]
 
@@ -191,11 +213,11 @@ class PlanB:
             if scores[i] < self.box_score_threshold_tracking:
                 # ignore low-certainty faces
                 continue
-    
+
             box = boxes[i]
             distance = _get_box_distance(self.target['box'], box)
             if distance > self.max_distance:
-                continue # ignore faces too far from the expected location
+                continue  # ignore faces too far from the expected location
 
             if distance < closest_box_distance:
                 closest_box_i = i
@@ -203,7 +225,7 @@ class PlanB:
 
         if closest_box_i is not None:
             self.ndrops = 0
-            self.target = { 'box': boxes[closest_box_i] }
+            self.target = {'box': boxes[closest_box_i]}
         else:
             # face not found
             self.ndrops = self.ndrops + 1
@@ -230,9 +252,11 @@ class PlanB:
             self.nframes = self.NFRAMES
 
         elapsed = (time.time() - self.start_time) % self.move_period
-        print('fps=%5.2f elapsed=%5.2f mode=%12s' % (self.fps, elapsed, self.mode), end=' ')
+        print('fps=%5.2f elapsed=%5.2f mode=%12s' %
+              (self.fps, elapsed, self.mode), end=' ')
         if self.mode_endtime is not None:
-            print(' mode_remains=%.2f' % (self.mode_endtime - time.time()), end='')
+            print(' mode_remains=%.2f' %
+                  (self.mode_endtime - time.time()), end='')
         if self.mode == Mode.EFFECT_START or self.mode == Mode.EFFECT_RUN:
             print(' ndrops=%d' % (self.ndrops), end='')
         print()

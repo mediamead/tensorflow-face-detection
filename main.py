@@ -3,6 +3,7 @@
 # pylint: disable=C0103
 # pylint: disable=E1101
 
+import profiler
 import sys
 import time
 import numpy as np
@@ -23,8 +24,10 @@ PATH_TO_LABELS = './protos/face_label_map.pbtxt'
 NUM_CLASSES = 2
 
 label_map = label_map_util.load_labelmap(PATH_TO_LABELS)
-categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=NUM_CLASSES, use_display_name=True)
+categories = label_map_util.convert_label_map_to_categories(
+    label_map, max_num_classes=NUM_CLASSES, use_display_name=True)
 category_index = label_map_util.create_category_index(categories)
+
 
 class TensoflowFaceDector(object):
     def __init__(self, PATH_TO_CKPT):
@@ -39,15 +42,13 @@ class TensoflowFaceDector(object):
                 od_graph_def.ParseFromString(serialized_graph)
                 tf.import_graph_def(od_graph_def, name='')
 
-
         with self.detection_graph.as_default():
             config = tf.ConfigProto()
             config.gpu_options.allow_growth = True
             config.gpu_options.per_process_gpu_memory_fraction = 0.25
-            
+
             self.sess = tf.Session(graph=self.detection_graph, config=config)
             self.windowNotSet = True
-
 
     def run(self, image):
         """image: bgr image
@@ -60,14 +61,17 @@ class TensoflowFaceDector(object):
         # result image with boxes and labels on it.
         # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
         image_np_expanded = np.expand_dims(image_np, axis=0)
-        image_tensor = self.detection_graph.get_tensor_by_name('image_tensor:0')
+        image_tensor = self.detection_graph.get_tensor_by_name(
+            'image_tensor:0')
         # Each box represents a part of the image where a particular object was detected.
         boxes = self.detection_graph.get_tensor_by_name('detection_boxes:0')
         # Each score represent how level of confidence for each of the objects.
         # Score is shown on the result image, together with the class label.
         scores = self.detection_graph.get_tensor_by_name('detection_scores:0')
-        classes = self.detection_graph.get_tensor_by_name('detection_classes:0')
-        num_detections = self.detection_graph.get_tensor_by_name('num_detections:0')
+        classes = self.detection_graph.get_tensor_by_name(
+            'detection_classes:0')
+        num_detections = self.detection_graph.get_tensor_by_name(
+            'num_detections:0')
         # Actual detection.
         #start_time = time.time()
         (boxes, scores, classes, num_detections) = self.sess.run(
@@ -77,38 +81,48 @@ class TensoflowFaceDector(object):
 
         return (boxes, scores, classes, num_detections)
 
-import profiler
 
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("-r", "--rotate", action='store_true', help="rotate clockwise for NN processing")
-    parser.add_argument("-f", "--stream_frames", action='store_true', help="send encoded frames upstream")
-    parser.add_argument("-n", "--no_visual", action='store_true', help="visualize")
-    parser.add_argument("-p", "--port", type=int, default=8089, help="upstream port")
-    parser.add_argument("-P", "--profiling", action='store_true', help="create profiler.csv")
-    parser.add_argument("-c", "--camera", type=int, default=0, help="camera id")
-    parser.add_argument("-s", "--skip", type=int, default=2, help="skip so many frames")
+    parser.add_argument("-r", "--rotate", action='store_true',
+                        help="rotate clockwise for NN processing")
+    parser.add_argument("-f", "--stream_frames",
+                        action='store_true', help="send encoded frames upstream")
+    parser.add_argument("-n", "--no_visual", action='store_true',
+                        default=False, help="do not visualize video stream")
+    parser.add_argument("-p", "--port", type=int,
+                        default=8089, help="upstream port")
+    parser.add_argument("-u", "--upstream", help="upstream file path")
+    parser.add_argument("-P", "--profiling",
+                        action='store_true', help="create profiler.csv")
+    parser.add_argument("-c", "--camera", type=int,
+                        default=0, help="camera id")
+    parser.add_argument("-s", "--skip", type=int,
+                        default=2, help="skip so many frames")
+    parser.add_argument("-F", "--no-face-contour", action='store_true',
+                        default=False, help="do not send face contour upstream")
 
     args = parser.parse_args()
 
     pb = planb.PlanB(args)
 
     if args.port > 0:
-        pb.upstream.connect_socket('localhost', args.port, stream_frames=args.stream_frames)
-    #else: FIXME
-    #    pb.upstream.open_file(args.upstream, stream_frames=args.stream_frames)
+        pb.upstream.connect_socket(
+            'localhost', args.port, stream_frames=args.stream_frames)
+    if args.upstream is not None:
+        pb.upstream.open_file(args.upstream, stream_frames=args.stream_frames)
 
     if args.profiling:
         profiler = profiler.Profiler()
     else:
         profiler = None
-    
+
     tDetector = TensoflowFaceDector(PATH_TO_CKPT)
 
     cap = cv2.VideoCapture(args.camera)
-    #cap.set(cv2.CAP_PROP_AUTOFOCUS, 0) # turn the autofocus off
-    
+    # cap.set(cv2.CAP_PROP_AUTOFOCUS, 0) # turn the autofocus off
+
     windowName = None
     visualize = not args.no_visual
 
@@ -127,7 +141,7 @@ if __name__ == "__main__":
             continue
         else:
             nframe = args.skip
-       
+
         meta = {}
 
         if args.rotate:
@@ -157,7 +171,7 @@ if __name__ == "__main__":
                 [h, w] = image.shape[:2]
                 windowName = "tensorflow based (%d, %d)" % (w, h)
                 cv2.namedWindow(windowName, cv2.WINDOW_NORMAL)
-                
+
             cv2.imshow(windowName, image)
 
         k = cv2.waitKey(1) & 0xff
@@ -165,7 +179,8 @@ if __name__ == "__main__":
             print("Exiting...")
             break
         elif k == ord('r'):
-            print("Resetting move timing (%d/%d)" % (pb.move_duration, pb.move_period))
+            print("Resetting move timing (%d/%d)" %
+                  (pb.move_duration, pb.move_period))
             pb.reset_move()
         elif k == ord('v'):
             visualize = not visualize

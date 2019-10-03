@@ -9,8 +9,8 @@ from mrcnn import visualize
 import cv2
 import imutils
 
-LABELS_FILE="coco_labels.txt"
-WEIGHTS_FILE="mask_rcnn_coco.h5"
+LABELS_FILE="keras_mask_rcnn/mask_rcnn_coco.labels"
+WEIGHTS_FILE="keras_mask_rcnn/mask_rcnn_coco.h5"
 PERSON_LABEL="person"
 
 class PersonDetector(object):
