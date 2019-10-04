@@ -91,9 +91,9 @@ if __name__ == "__main__":
                         action='store_true', help="send encoded frames upstream")
     parser.add_argument("-n", "--no_visual", action='store_true',
                         default=False, help="do not visualize video stream")
-    parser.add_argument("-p", "--port", type=int,
+    parser.add_argument("-p", "--upstream-port", type=int,
                         default=8089, help="upstream port")
-    parser.add_argument("-u", "--upstream", help="upstream file path")
+    parser.add_argument("-u", "--upstream-log", help="upstream logfile")
     parser.add_argument("-P", "--profiling",
                         action='store_true', help="create profiler.csv")
     parser.add_argument("-c", "--camera", type=int,
@@ -106,12 +106,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     pb = planb.PlanB(args)
-
-    if args.port > 0:
-        pb.upstream.connect_socket(
-            'localhost', args.port, stream_frames=args.stream_frames)
-    if args.upstream is not None:
-        pb.upstream.open_file(args.upstream, stream_frames=args.stream_frames)
 
     if args.profiling:
         profiler = profiler.Profiler()
