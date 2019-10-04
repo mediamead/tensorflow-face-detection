@@ -60,7 +60,7 @@ class PlanB:
     T3 = 3
 
     def __init__(self, args):
-        self.upstream = Upstream()
+        self.upstream = Upstream(args.stream_frames)
         self.target = None
         self.start_time = time.time()
         self.args = args

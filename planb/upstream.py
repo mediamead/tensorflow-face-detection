@@ -10,19 +10,17 @@ logger.setLevel(logging.INFO)
 
 
 class Upstream:
-    def __init__(self):
-        self.stream_frames = False
+    def __init__(self, stream_frames):
+        self.stream_frames = stream_frames
         self.clientsocket = None
         self.fileh = None
 
-    def connect_socket(self, host, port, stream_frames):
-        self.stream_frames = stream_frames
+    def connect_socket(self, host, port):
         self.clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.clientsocket.connect((host, port))
         logger.info('Connected to upstream server %s:%d' % (host, port))
 
-    def open_file(self, file, stream_frames):
-        self.stream_frames = stream_frames
+    def open_file(self, file):
         self.fileh = open(file, 'wb')
         logger.info('Opened upstream file %s' % file)
 
