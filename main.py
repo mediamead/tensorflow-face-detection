@@ -96,6 +96,8 @@ if __name__ == "__main__":
     parser.add_argument("-u", "--upstream-log", help="upstream logfile")
     parser.add_argument("-P", "--profiling",
                         action='store_true', help="create profiler.csv")
+    parser.add_argument("-m", "--mirror",
+                        action='store_true', help="flip the image horizontally to mimic a mirror")
     parser.add_argument("-c", "--camera", type=int,
                         default=0, help="camera id")
     parser.add_argument("-s", "--skip", type=int,
@@ -137,6 +139,8 @@ if __name__ == "__main__":
             nframe = args.skip
 
         meta = {}
+        if args.mirror:
+            image = cv2.flip(image, 1)
 
         if args.rotate:
             image = cv2.rotate(image, rotateCode=cv2.ROTATE_90_CLOCKWISE)
