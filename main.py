@@ -9,11 +9,15 @@ import time
 import numpy as np
 import tensorflow as tf
 import cv2
+import logging
 
 import planb
 
 from utils import label_map_util
 from utils import visualization_utils_color as vis_util
+
+logging.basicConfig()
+logging.basicConfig(level=logging.ERROR, format='%(message)s')
 
 # Path to frozen detection graph. This is the actual model that is used for the object detection.
 PATH_TO_CKPT = './model/frozen_inference_graph_face.pb'

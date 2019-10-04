@@ -7,7 +7,7 @@ import time
 import logging
 
 logger = logging.getLogger('upstream')
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 RETRY_PERIOD = 3
 
