@@ -61,6 +61,7 @@ class PersonDetector(object):
         if selected_i is None:
             return None
 
+        # apply person mask to the image
         mask = r["masks"][:, :, selected_i]
         image = image * mask[:,:,None].astype(image.dtype)
 

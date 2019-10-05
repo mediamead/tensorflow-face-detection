@@ -37,7 +37,7 @@ def _get_face_image(image, box):
     # take a box larger by 50% each way, while keeping within ranges
 
     dy1 = (endY - startY)*3/4  # 75% on top
-    dy2 = (endY - startY)/4    # 25% on the botton
+    dy2 = 0 # (endY - startY)/4    # 25% on the botton
     dx = (endX - startX)/2     # 50% on the sides
 
     startX1 = int((startX - dx)*w)

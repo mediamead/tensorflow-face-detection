@@ -61,6 +61,7 @@ class Upstream:
         self.send_event(image, meta, {'mode': 'effect_abort', 'time': T})
 
     def send_face(self, face_image):
+        print('face=%s' % face_image)
         _, face_imdata = cv2.imencode('.jpg', face_image)
         encoded_face_imdata = base64.b64encode(face_imdata).decode('ascii')
         self.send_event(None, None, {'face': encoded_face_imdata})
