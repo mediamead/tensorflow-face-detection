@@ -30,15 +30,18 @@ def _get_box_sq(box):
 
 
 def _get_face_image(image, box):
+    """
+        returns the region of image containing face
+        taking area somewhat bigger than the bounding box
+    """
     h, w = image.shape[0:2]
     [startY, startX, endY, endX] = box
     logger.debug('_get_face_image: image h/w=%d/%d,  startX=%s, startY=%d, endX=%d, endY=%d' %
                  (h, w, startX, startY, endX, endY))
-    # take a box larger by 50% each way, while keeping within ranges
 
-    dy1 = (endY - startY)*3/4  # 75% on top
-    dy2 = (endY - startY)/4    # 25% on the botton
-    dx = (endX - startX)/2     # 50% on the sides
+    dy1 = (endY - startY)/3  # +33% on top
+    dy2 = (endY - startY)/3  # +33% on the botton
+    dx = (endX - startX)/4   # +25% on the sides
 
     startX1 = int((startX - dx)*w)
     startY1 = int((startY - dy1)*h)
@@ -149,7 +152,11 @@ class PlanB:
                 # take area slightly larger than the face bounding box and find person there
                 face_image = _get_face_image(image, box)
                 face_image = self.pd.get_person_image(face_image)
-                # cv2.imshow("face", face_image)
+                
+                if self.args.debug_face:
+                    from matplotlib import pyplot as plt
+                    plt.imshow(face_image), plt.show()
+
                 self.upstream.send_face(face_image)
 
             self.mode = Mode.EFFECT_START

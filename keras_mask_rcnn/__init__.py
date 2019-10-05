@@ -61,15 +61,22 @@ class PersonDetector(object):
         if selected_i is None:
             return None
 
+        import numpy as np
+        # https://stackoverflow.com/questions/32290096/python-opencv-add-alpha-channel-to-rgb-image
+        # make non-masked area transparent
+        b_channel, g_channel, r_channel = cv2.split(image)
         mask = r["masks"][:, :, selected_i]
-        image = image * mask[:,:,None].astype(image.dtype)
+        alpha_channel = mask.astype(np.uint8) * 255 # alpha channel: 0=transparent background, 255=non-transparent person
+        image = cv2.merge((b_channel, g_channel, r_channel, alpha_channel))
 
-        (startY, startX, endY, endX) = r["rois"][selected_i]
+        #(startY, startX, endY, endX) = r["rois"][selected_i]
         #print("%d:%d %d:%d" % (startY, startX, endY, endX))
-        image = image[startY:endY, startX:endX]
+        #image = image[startY:endY, startX:endX]
         #cv2.rectangle(image, (startX, startY), (endX, endY), (255,0,0), 2)
 
-        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+        #from matplotlib import pyplot as plt
+        #plt.imshow(image), plt.colorbar(), plt.show()
+
         return image
 
 if __name__ == "__main__":

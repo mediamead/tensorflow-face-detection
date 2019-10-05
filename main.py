@@ -108,6 +108,8 @@ if __name__ == "__main__":
                         default=2, help="skip so many frames")
     parser.add_argument("-F", "--no-face-contour", action='store_true',
                         default=False, help="do not send face contour upstream")
+    parser.add_argument("--debug-face", action='store_true',
+                        default=False, help="show face as sent upstream (halts execution)")
 
     args = parser.parse_args()
 

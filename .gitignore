@@ -2,3 +2,4 @@ upstream.json
 __pycache__
 keras_mask_rcnn/mask_rcnn_coco.h5
 .DS_Store
+.vscode/settings.json
