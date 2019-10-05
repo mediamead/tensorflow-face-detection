@@ -8,6 +8,10 @@ from mrcnn import visualize
 
 import cv2
 import imutils
+import logging
+
+logger = logging.getLogger('keras_mask_rcnn')
+logger.setLevel(logging.DEBUG)
 
 LABELS_FILE="keras_mask_rcnn/mask_rcnn_coco.labels"
 WEIGHTS_FILE="keras_mask_rcnn/mask_rcnn_coco.h5"
