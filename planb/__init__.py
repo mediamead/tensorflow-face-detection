@@ -8,6 +8,7 @@ from keras_mask_rcnn import PersonDetector
 
 import logging
 logger = logging.getLogger('planb')
+logger.setLevel(logging.DEBUG)
 
 
 def _get_box_distance(box1, box2):
@@ -29,7 +30,35 @@ def _get_box_sq(box):
 
 
 def _get_face_image(image, box):
-    return image  # FIXME
+    h, w = image.shape[0:2]
+    [startY, startX, endY, endX] = box
+    logger.debug('_get_face_image: image h/w=%d/%d,  startX=%s, startY=%d, endX=%d, endY=%d' %
+                 (h, w, startX, startY, endX, endY))
+    # take a box larger by 50% each way, while keeping within ranges
+
+    dy1 = (endY - startY)*3/4  # 75% on top
+    dy2 = (endY - startY)/4    # 25% on the botton
+    dx = (endX - startX)/2     # 50% on the sides
+
+    startX1 = int((startX - dx)*w)
+    startY1 = int((startY - dy1)*h)
+    endX1 = int((endX + dx)*w)
+    endY1 = int((endY + dy2)*h)
+
+    if startX1 < 0:
+        startX1 = 0
+    if startY1 < 0:
+        startY1 = 0
+    if endX1 > w-1:
+        endX1 = w-1
+    if endY1 > h-1:
+        endY1 = h-1
+    logger.debug('_get_face_image: startX1=%s, startY1=%d, endX1=%d, endY1=%d' %
+                 (startX1, startY1, endX1, endY1))
+
+    # cut image by that enlarged box
+    return image[startY1:endY1, startX1:endX1]
+
 
 # ========================================================================================================
 
@@ -60,7 +89,8 @@ class PlanB:
     T3 = 3
 
     def __init__(self, args):
-        self.upstream = Upstream('localhost', args.upstream_port, args.upstream_log, args.stream_frames)
+        self.upstream = Upstream(
+            'localhost', args.upstream_port, args.upstream_log, args.stream_frames)
         self.target = None
         self.start_time = time.time()
         self.args = args
@@ -119,6 +149,7 @@ class PlanB:
                 # take area slightly larger than the face bounding box and find person there
                 face_image = _get_face_image(image, box)
                 face_image = self.pd.get_person_image(face_image)
+                # cv2.imshow("face", face_image)
                 self.upstream.send_face(face_image)
 
             self.mode = Mode.EFFECT_START
