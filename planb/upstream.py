@@ -75,7 +75,7 @@ class Upstream:
             if self.stream_frames:
                 # add encoded frame to the event structure
                 image = cv2.resize(image, (640, 480))  # FIXME
-                _, imdata = cv2.imencode('.jpg', image)
+                _, imdata = cv2.imencode('.png', image)
                 encoded_imdata = base64.b64encode(imdata).decode('ascii')
                 event['frame'] = encoded_imdata
 
