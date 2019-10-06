@@ -43,6 +43,11 @@ class PersonDetector(object):
         self.model.load_weights(WEIGHTS_FILE, by_name=True)
 
     def get_person_image(self, image):
+        """
+            Detects person in the given image,
+            makes background transparent,
+            returns RGBA image
+        """
         # prepare and process image
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         image = imutils.resize(image, width=512)
@@ -67,7 +72,7 @@ class PersonDetector(object):
         b_channel, g_channel, r_channel = cv2.split(image)
         mask = r["masks"][:, :, selected_i]
         alpha_channel = mask.astype(np.uint8) * 255 # alpha channel: 0=transparent background, 255=non-transparent person
-        image = cv2.merge((b_channel, g_channel, r_channel, alpha_channel))
+        image = cv2.merge((r_channel, g_channel, b_channel, alpha_channel))
 
         #(startY, startX, endY, endX) = r["rois"][selected_i]
         #print("%d:%d %d:%d" % (startY, startX, endY, endX))
