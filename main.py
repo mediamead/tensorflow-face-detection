@@ -145,9 +145,6 @@ if __name__ == "__main__":
             nframe = args.skip
 
         meta = {}
-        if args.mirror:
-            image = cv2.flip(image, 1)
-
         if args.rotate:
             image = cv2.rotate(image, rotateCode=cv2.ROTATE_90_CLOCKWISE)
 
@@ -176,6 +173,8 @@ if __name__ == "__main__":
                 windowName = "tensorflow based (%d, %d)" % (w, h)
                 cv2.namedWindow(windowName, cv2.WINDOW_NORMAL)
 
+            if args.mirror:
+                image = cv2.flip(image, 1)
             cv2.imshow(windowName, image)
 
         k = cv2.waitKey(1) & 0xff
