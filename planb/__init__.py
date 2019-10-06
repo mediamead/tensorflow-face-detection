@@ -29,14 +29,14 @@ def _get_box_sq(box):
     return math.fabs(box_w * box_h)
 
 
-def _get_face_image(image, box):
+def _get_extended_face_image(image, box):
     """
         returns the region of image containing face
         taking area somewhat bigger than the bounding box
     """
     h, w = image.shape[0:2]
     [startY, startX, endY, endX] = box
-    logger.debug('_get_face_image: image h/w=%d/%d,  startX=%s, startY=%d, endX=%d, endY=%d' %
+    logger.debug('_get_face_image: image h/w=%d/%d,  startX=%.2f, startY=%.2f, endX=%.2f, endY=%.2f' %
                  (h, w, startX, startY, endX, endY))
 
     dy1 = (endY - startY)/3  # +33% on top
@@ -56,7 +56,7 @@ def _get_face_image(image, box):
         endX1 = w-1
     if endY1 > h-1:
         endY1 = h-1
-    logger.debug('_get_face_image: startX1=%s, startY1=%d, endX1=%d, endY1=%d' %
+    logger.debug('_get_face_image: startX1=%d, startY1=%d, endX1=%d, endY1=%d' %
                  (startX1, startY1, endX1, endY1))
 
     # cut image by that enlarged box
@@ -111,8 +111,10 @@ class PlanB:
         self.start_time = time.time()
 
     def unrotate(self, box):
-        [x1, y1, x2, y2] = box
-        return [1-y2, x2, 1-y1, x1]
+        [startY, startX, endY, endX] = box
+        #[x1, y1, x2, y2] = box
+        #return [1-y2, x2, 1-y1, x1]
+        return [1-endX, startY, 1-startX, endY]
 
     def run(self, image, meta, boxes, scores):
         # how many seconds passed since the start of the cycle
@@ -140,23 +142,24 @@ class PlanB:
             if i is None:
                 return  # end of processing
 
-            # new face found
-            if self.args.rotate:
-                box = self.unrotate(boxes[i].tolist())
-            else:
-                box = boxes[i].tolist()
-            self.upstream.send_effect_start(
-                image, meta, box, [self.T1, self.T2, self.T3])
-
+            # new face found - extract face contour
+            box = boxes[i].tolist()
+            face_image = None
             if self.pd is not None:
                 # take area slightly larger than the face bounding box and find person there
-                face_image = _get_face_image(image, box)
+                face_image = _get_extended_face_image(image, box)
                 face_image = self.pd.get_person_image(face_image)
                 
                 if self.args.debug_face:
                     from matplotlib import pyplot as plt
                     plt.imshow(face_image), plt.show()
 
+            # send upstream events, in the original system of coordinates
+            if self.args.rotate:
+                box = self.unrotate(box)
+            self.upstream.send_effect_start(
+                image, meta, box, [self.T1, self.T2, self.T3])
+            if face_image is not None:
                 self.upstream.send_face(face_image)
 
             self.mode = Mode.EFFECT_START
@@ -280,7 +283,7 @@ class PlanB:
     nframes_time = None
     fps = -1
 
-    def show_info(self, frame):
+    def show_info(self):
         self.nframes = self.nframes - 1
         if self.nframes <= 0:
             now = time.time()

@@ -159,7 +159,7 @@ if __name__ == "__main__":
         pb.run(image, meta, boxes[0], scores[0])
         t[4] = time.time()
 
-        pb.show_info(image)
+        pb.show_info()
 
         if visualize:
             vis_util.visualize_boxes_and_labels_on_image_array(
