@@ -74,7 +74,7 @@ class Upstream:
         if self.clientsocket is not None or self.fileh is not None:
             if self.stream_frames:
                 # add encoded frame to the event structure
-                image = cv2.resize(image, (640, 480))  # FIXME
+                image = cv2.resize(image, (640, 480))
                 _, imdata = cv2.imencode('.png', image)
                 encoded_imdata = base64.b64encode(imdata).decode('ascii')
                 event['frame'] = encoded_imdata

@@ -6,6 +6,7 @@ from mrcnn.config import Config
 from mrcnn import model as modellib
 from mrcnn import visualize
 
+import math
 import cv2
 import imutils
 import logging
@@ -60,8 +61,21 @@ class PersonDetector(object):
             if label != PERSON_LABEL:
                 continue
             
-            #if r["scores"][i] > ... FIXME
-            selected_i = i
+            if r["scores"][i] < 0.5:
+                # do not consider low-score objects
+                continue
+
+            # calculate distance of the middle of the person from the middle of the image
+            (_, startX, _, endX) = r["rois"][i]
+            dX = math.fabs((endX - startX) / 2 - 0.5)
+            if selected_i is None:
+                selected_i = i
+                selected_dX = dX
+            else:
+                # find the middle of the detected person
+                if dX < selected_dX:
+                    selected_i = i
+                    selected_dX = dX
 
         if selected_i is None:
             return None

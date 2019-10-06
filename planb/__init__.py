@@ -159,7 +159,9 @@ class PlanB:
                 box = self.unrotate(box)
             self.upstream.send_effect_start(
                 image, meta, box, [self.T1, self.T2, self.T3])
-            if face_image is not None:
+            if face_image is None:
+                print("person not detected")
+            else:
                 self.upstream.send_face(face_image)
 
             self.mode = Mode.EFFECT_START
@@ -224,7 +226,7 @@ class PlanB:
     # ============================================================================
 
     def find_best_target(self, image, meta, boxes, scores):
-        # FIXME-6: find the biggest face
+        # find the biggest face
         best_box_i = None
         best_box_sq = 0
 
@@ -234,6 +236,7 @@ class PlanB:
                 continue
 
             box = boxes[i]
+            # FIXME: only consider targets which are large enough for person detection
             sq = _get_box_sq(box)
             if sq > best_box_sq:
                 best_box_i = i
@@ -246,7 +249,7 @@ class PlanB:
         return [best_box_i, best_box_sq]
 
     def find_locked_target(self, image, meta, boxes, scores):
-        # FIXME-12: find box closest to the target
+        # find box closest to the target
         closest_box_i = None
         closest_box_distance = float('inf')
 

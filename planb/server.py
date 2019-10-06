@@ -86,7 +86,7 @@ if __name__ == "__main__":
             delay = 1 # minimal delay, show received frames as fast as possible
         except:
             port = None
-            delay = 10 # FIXME fixed 10 ms delay (~100 fps)
+            delay = 10 # fixed 10 ms delay (~100 fps)
 
     except:
         print("")
