@@ -39,9 +39,15 @@ def _get_face_image(image, box):
     logger.debug('_get_face_image: image h/w=%d/%d,  startX=%s, startY=%d, endX=%d, endY=%d' %
                  (h, w, startX, startY, endX, endY))
 
+<<<<<<< HEAD
     dy1 = (endY - startY)/3  # +33% on top
     dy2 = (endY - startY)/3  # +33% on the botton
     dx = (endX - startX)/4   # +25% on the sides
+=======
+    dy1 = (endY - startY)*3/4  # 75% on top
+    dy2 = 0 # (endY - startY)/4    # 25% on the botton
+    dx = (endX - startX)/2     # 50% on the sides
+>>>>>>> a7446088a1b40dbc2c77a73ccfe75711423e07c5
 
     startX1 = int((startX - dx)*w)
     startY1 = int((startY - dy1)*h)
