@@ -244,14 +244,14 @@ class PlanB:
             distance = _get_box_distance(self.target['box'], box)
 
             if distance > maxd:
-                print("%d ignored %f > %f" % (i, distance, maxd))
+                #print("%d ignored %f > %f" % (i, distance, maxd))
                 continue # ignore faces which are too far from previous position
 
             #if distance > self.max_distance:
             #    continue  # ignore faces too far from the expected location
 
             if distance < closest_box_distance:
-                print("%d learned %f < %f" % (i, distance, closest_box_distance))
+                #print("%d learned %f < %f" % (i, distance, closest_box_distance))
                 closest_box_i = i
                 closest_box_distance = distance
 
