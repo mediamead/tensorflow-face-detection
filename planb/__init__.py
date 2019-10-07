@@ -122,15 +122,17 @@ class PlanB:
             # new face found - extract face contour
             box = boxes[i].tolist()
 
+            # send upstream events, in the original system of coordinates
+            if self.args.rotate:
+                box0 = self.unrotate(box)
+            else:
+                box0 = box
+            self.upstream.send_effect_start(
+                image, meta, box0, [self.T1, self.T2, self.T3])
+
             if not self.args.no_face_contour:
                 face_image = _get_extended_face_image(image, box)
                 self.upstream.send_face(face_image)
-
-            # send upstream events, in the original system of coordinates
-            if self.args.rotate:
-                box = self.unrotate(box)
-            self.upstream.send_effect_start(
-                image, meta, box, [self.T1, self.T2, self.T3])
 
             self.mode = Mode.EFFECT_START
             self.mode_endtime = time.time() + self.T1
@@ -148,10 +150,10 @@ class PlanB:
                     return  # temporary face loss, do nothing
 
                 if self.args.rotate:
-                    box = self.unrotate(boxes[i].tolist())
+                    box0 = self.unrotate(boxes[i].tolist())
                 else:
-                    box = boxes[i].tolist()
-                self.upstream.send_effect_run(image, meta, box)
+                    box0 = boxes[i].tolist()
+                self.upstream.send_effect_run(image, meta, box0)
                 return  # end of processing
 
             self.mode = Mode.EFFECT_RUN
@@ -170,10 +172,10 @@ class PlanB:
                     return  # temporary face loss, do nothing
 
                 if self.args.rotate:
-                    box = self.unrotate(boxes[i].tolist())
+                    box0 = self.unrotate(boxes[i].tolist())
                 else:
-                    box = boxes[i].tolist()
-                self.upstream.send_effect_run(image, meta, box)
+                    box0 = boxes[i].tolist()
+                self.upstream.send_effect_run(image, meta, box0)
                 return  # end of processing
 
             self.mode = Mode.EFFECT_ABORT
