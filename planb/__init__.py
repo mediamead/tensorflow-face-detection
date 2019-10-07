@@ -12,11 +12,14 @@ logger.setLevel(logging.DEBUG)
 
 
 def _get_box_distance(box1, box2):
+    [startY1, startX1, endY1, endX1] = box1
+    [startY2, startX2, endY2, endX2] = box2
+
     # return distance between the centers of the boxes
-    box1_cx = (box1[0] + box1[2])/2
-    box1_cy = (box1[1] + box1[3])/2
-    box2_cx = (box2[0] + box2[2])/2
-    box2_cy = (box2[1] + box2[3])/2
+    box1_cx = (startX1 + endX1)/2
+    box1_cy = (startY1 + endY1)/2
+    box2_cx = (startX2 + endX2)/2
+    box2_cy = (startY2 + endY2)/2
     dx = box1_cx - box2_cx
     dy = box1_cy - box2_cy
     return math.sqrt(dx*dx + dy*dy)
@@ -63,6 +66,10 @@ def _get_extended_face_image(image, box):
     return image[startY1:endY1, startX1:endX1]
 
 
+def _get_box_width(box):
+    [_, startX, _, endX] = box
+    return endX - startX
+
 # ========================================================================================================
 
 
@@ -80,7 +87,7 @@ class PlanB:
     # min acceptable score during initial detection
     box_score_threshold_detection = 0.8
     box_score_threshold_tracking = 0.5  # min acceptable score during tracking
-    max_distance = 100  # max distance between face on consecutive frames
+    max_distance = 1  # max distance between face on consecutive frames (* face_width)
     max_ndrops = 3  # max number of dropped frames before tracking failure
 
     T1 = 3
@@ -226,6 +233,7 @@ class PlanB:
         # find box closest to the target
         closest_box_i = None
         closest_box_distance = float('inf')
+        maxd = _get_box_width(self.target['box']) * self.max_distance
 
         for i in range(len(boxes)):
             if scores[i] < self.box_score_threshold_tracking:
@@ -234,10 +242,16 @@ class PlanB:
 
             box = boxes[i]
             distance = _get_box_distance(self.target['box'], box)
-            if distance > self.max_distance:
-                continue  # ignore faces too far from the expected location
+
+            if distance > maxd:
+                print("%d ignored %f > %f" % (i, distance, maxd))
+                continue # ignore faces which are too far from previous position
+
+            #if distance > self.max_distance:
+            #    continue  # ignore faces too far from the expected location
 
             if distance < closest_box_distance:
+                print("%d learned %f < %f" % (i, distance, closest_box_distance))
                 closest_box_i = i
                 closest_box_distance = distance
 
