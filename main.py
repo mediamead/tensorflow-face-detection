@@ -105,11 +105,13 @@ if __name__ == "__main__":
     parser.add_argument("-c", "--camera", type=int,
                         default=0, help="camera id")
     parser.add_argument("-s", "--skip", type=int,
-                        default=2, help="skip so many frames")
+                        default=2, help="skip so many frames (default=2)")
     parser.add_argument("-F", "--no-face-contour", action='store_true',
                         default=False, help="do not send face contour upstream")
     parser.add_argument("--debug-face", action='store_true',
                         default=False, help="show face as sent upstream (halts execution)")
+    #parser.add_argument("--fps", type=int,
+    #                    default=15, help="set fps (default=15)")
 
     args = parser.parse_args()
 
@@ -123,7 +125,10 @@ if __name__ == "__main__":
     tDetector = TensoflowFaceDector(PATH_TO_CKPT)
 
     cap = cv2.VideoCapture(args.camera)
+    #cap.set(cv2.CAP_PROP_FPS, args.fps)
     # cap.set(cv2.CAP_PROP_AUTOFOCUS, 0) # turn the autofocus off
+
+    print("Camera %dx%d @ %dfps" % (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)), cv2.CAP_PROP_FPS))
 
     windowName = None
     visualize = not args.no_visual
