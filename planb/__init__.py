@@ -67,15 +67,14 @@ def _get_extended_face_image(image, box):
 
 
 class Mode(Enum):
-    MOVING = 1
-    IDLE = 2
-    EFFECT_START = 3
-    EFFECT_RUN = 4
-    EFFECT_ABORT = 5
+    IDLE = 1
+    EFFECT_START = 2
+    EFFECT_RUN = 3
+    EFFECT_ABORT = 4
 
 
 class PlanB:
-    mode = Mode(Mode.IDLE)
+    mode = Mode.IDLE
     mode_endtime = None
 
     # min acceptable score during initial detection
@@ -83,9 +82,6 @@ class PlanB:
     box_score_threshold_tracking = 0.5  # min acceptable score during tracking
     max_distance = 100  # max distance between face on consecutive frames
     max_ndrops = 3  # max number of dropped frames before tracking failure
-
-    move_period = 10
-    move_duration = 3
 
     T1 = 3
     T2 = 10
@@ -107,9 +103,6 @@ class PlanB:
 
     import time
 
-    def reset_move(self):
-        self.start_time = time.time()
-
     def unrotate(self, box):
         [startY, startX, endY, endX] = box
         #[x1, y1, x2, y2] = box
@@ -117,27 +110,9 @@ class PlanB:
         return [1-endX, startY, 1-startX, endY]
 
     def run(self, image, meta, boxes, scores):
-        # how many seconds passed since the start of the cycle
-        elapsed = (time.time() - self.start_time) % self.move_period
-        moving = (elapsed < self.move_duration)
-
         # process single frame
         # send messages upstream
-
-        if self.mode == Mode.MOVING:
-            if moving:
-                # still moving
-                return  # end of processing
-            else:
-                self.mode = Mode.IDLE
-                # fall through
-
         if self.mode == Mode.IDLE:
-            if moving:
-                # started to move
-                self.mode = Mode.MOVING
-                return  # end of processing
-
             [i, _] = self.find_best_target(image, meta, boxes, scores)
             if i is None:
                 return  # end of processing
@@ -159,10 +134,12 @@ class PlanB:
                 box = self.unrotate(box)
             self.upstream.send_effect_start(
                 image, meta, box, [self.T1, self.T2, self.T3])
-            if face_image is None:
-                print("person not detected")
-            else:
-                self.upstream.send_face(face_image)
+
+            if self.pd is not None:
+                if face_image is None:
+                    print("person not detected")
+                else:
+                    self.upstream.send_face(face_image)
 
             self.mode = Mode.EFFECT_START
             self.mode_endtime = time.time() + self.T1
@@ -216,10 +193,7 @@ class PlanB:
             if time.time() < self.mode_endtime:
                 return  # end of processing
 
-            if moving:
-                self.mode = Mode.MOVING
-            else:
-                self.mode = Mode.IDLE
+            self.mode = Mode.IDLE
             self.mode_endtime = None
             return  # end of processing
 
@@ -295,9 +269,8 @@ class PlanB:
             self.nframes_time = now
             self.nframes = self.NFRAMES
 
-        elapsed = (time.time() - self.start_time) % self.move_period
-        print('fps=%5.2f elapsed=%5.2f mode=%12s' %
-              (self.fps, elapsed, self.mode), end=' ')
+        print('fps=%5.2f mode=%12s' %
+              (self.fps, self.mode), end=' ')
         if self.mode_endtime is not None:
             print(' mode_remains=%.2f' %
                   (self.mode_endtime - time.time()), end='')
