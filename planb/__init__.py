@@ -101,11 +101,6 @@ class PlanB:
         self.start_time = time.time()
         self.args = args
 
-        if not args.no_face_contour:
-            self.pd = PersonDetector()
-        else:
-            self.pd = None
-
     # ============================================================================
 
     import time
@@ -126,27 +121,16 @@ class PlanB:
 
             # new face found - extract face contour
             box = boxes[i].tolist()
-            face_image = None
-            if self.pd is not None:
-                # take area slightly larger than the face bounding box and find person there
+
+            if not self.args.no_face_contour:
                 face_image = _get_extended_face_image(image, box)
-                face_image = self.pd.get_person_image(face_image)
-                
-                if self.args.debug_face:
-                    from matplotlib import pyplot as plt
-                    plt.imshow(face_image), plt.show()
+                self.upstream.send_face(face_image)
 
             # send upstream events, in the original system of coordinates
             if self.args.rotate:
                 box = self.unrotate(box)
             self.upstream.send_effect_start(
                 image, meta, box, [self.T1, self.T2, self.T3])
-
-            if self.pd is not None:
-                if face_image is None:
-                    print("person not detected")
-                else:
-                    self.upstream.send_face(face_image)
 
             self.mode = Mode.EFFECT_START
             self.mode_endtime = time.time() + self.T1
