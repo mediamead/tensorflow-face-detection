@@ -8,7 +8,7 @@ from keras_mask_rcnn import PersonDetector
 
 import logging
 logger = logging.getLogger('planb')
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.ERROR)
 
 
 def _get_box_distance(box1, box2):

@@ -17,5 +17,6 @@
     "SmoothSpeed": 1.0,
     "ShowTempCenter": false,
     "ViewScaleX": 1.33,
-    "ViewScaleY": 1.33
+    "ViewScaleY": 1.33,
+    "StartDelayTime": 1.0
 }
