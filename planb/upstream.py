@@ -61,7 +61,7 @@ class Upstream:
         self.send_event(image, meta, {'mode': 'effect_abort', 'time': T})
 
     def send_face(self, face_image):
-        _, face_imdata = cv2.imencode('.png', face_image)
+        _, face_imdata = cv2.imencode('.jpg', face_image)
         encoded_face_imdata = base64.b64encode(face_imdata).decode('ascii')
         self.send_event(None, None, {'face': encoded_face_imdata})
 
@@ -75,7 +75,7 @@ class Upstream:
             if self.stream_frames:
                 # add encoded frame to the event structure
                 image = cv2.resize(image, (640, 480))
-                _, imdata = cv2.imencode('.png', image)
+                _, imdata = cv2.imencode('.jpg', image)
                 encoded_imdata = base64.b64encode(imdata).decode('ascii')
                 event['frame'] = encoded_imdata
 
