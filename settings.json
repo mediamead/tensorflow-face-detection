@@ -1,0 +1,21 @@
+{
+    "AllowTestUI": true,
+    "Camera": "SplitCam Video Driver",
+    "Port": 8089,
+    "RotateUI": true,
+    "RotationAngle": 90.0,
+    "GlitchLetters": false,
+    "ScreenshotsPath": "",
+    "ScreenshotPeriod": 2.0,
+    "ScreenshotPrefix": "screenshot_",
+    "MirrorHorizontal": false,
+    "MirrorVertical": true,
+    "RequestedWidth": 1280,
+    "RequestedHeight": 720,
+    "RequestedFPS": 30,
+    "EnableSmoothing": true,
+    "SmoothSpeed": 1.0,
+    "ShowTempCenter": true,
+    "ViewScaleX": 1.33,
+    "ViewScaleY": 1.33
+}
