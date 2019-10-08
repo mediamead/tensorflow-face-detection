@@ -149,11 +149,17 @@ class PlanB:
                 if i < 0:
                     return  # temporary face loss, do nothing
 
+                box = boxes[i].tolist()
                 if self.args.rotate:
-                    box0 = self.unrotate(boxes[i].tolist())
+                    box0 = self.unrotate(box)
                 else:
                     box0 = boxes[i].tolist()
                 self.upstream.send_effect_run(image, meta, box0)
+
+                if not self.args.no_face_contour:
+                    face_image = _get_extended_face_image(image, box)
+                    self.upstream.send_face(face_image)
+
                 return  # end of processing
 
             self.mode = Mode.EFFECT_RUN
@@ -171,11 +177,17 @@ class PlanB:
                 if i < 0:
                     return  # temporary face loss, do nothing
 
+                box = boxes[i].tolist()
                 if self.args.rotate:
-                    box0 = self.unrotate(boxes[i].tolist())
+                    box0 = self.unrotate(box)
                 else:
                     box0 = boxes[i].tolist()
                 self.upstream.send_effect_run(image, meta, box0)
+
+                if not self.args.no_face_contour:
+                    face_image = _get_extended_face_image(image, box)
+                    self.upstream.send_face(face_image)
+
                 return  # end of processing
 
             self.mode = Mode.EFFECT_ABORT
