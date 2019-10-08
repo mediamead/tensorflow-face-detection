@@ -43,8 +43,8 @@ def _get_extended_face_image(image, box):
                  (h, w, startX, startY, endX, endY))
 
     dy1 = (endY - startY)/3  # +33% on top
-    dy2 = (endY - startY)/3  # +33% on the botton
-    dx = (endX - startX)/4   # +25% on the sides
+    dy2 = (endY - startY)/2  # +33% on the botton
+    dx = (endX - startX)/2   # +25% on the sides
 
     startX1 = int((startX - dx)*w)
     startY1 = int((startY - dy1)*h)
@@ -92,7 +92,7 @@ class PlanB:
 
     T1 = 3
     T2 = 10
-    T3 = 3
+    T3 = 0.1
 
     def __init__(self, args):
         self.upstream = Upstream(

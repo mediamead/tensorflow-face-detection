@@ -110,6 +110,10 @@ if __name__ == "__main__":
                         default=False, help="do not send face contour upstream")
     parser.add_argument("--debug-face", action='store_true',
                         default=False, help="show face as sent upstream (halts execution)")
+    parser.add_argument("--camera-width", type=int,
+                        help="set camera resolution width")
+    parser.add_argument("--camera-height", type=int,
+                        help="set camera resolution height")
     #parser.add_argument("--fps", type=int,
     #                    default=15, help="set fps (default=15)")
 
@@ -126,7 +130,11 @@ if __name__ == "__main__":
 
     cap = cv2.VideoCapture(args.camera)
     #cap.set(cv2.CAP_PROP_FPS, args.fps)
-    # cap.set(cv2.CAP_PROP_AUTOFOCUS, 0) # turn the autofocus off
+
+ #   if args.camera_width is not None:
+ #       cap.set(cv2.CV_CAP_PROP_FRAME_WIDTH, args.camera_width)
+ #   if args.camera_heigth is not None:
+ #       cap.set(cv2.CV_CAP_PROP_FRAME_HEIGHT, args.camera_height)
 
     print("Camera %dx%d @ %dfps" % (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)), cv2.CAP_PROP_FPS))
 
