@@ -91,9 +91,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--rotate", action='store_true',
                         help="rotate clockwise for NN processing")
-    parser.add_argument("-f", "--stream_frames",
+    parser.add_argument("-f", "--stream-frames",
                         action='store_true', help="send encoded frames upstream")
-    parser.add_argument("-n", "--no_visual", action='store_true',
+    parser.add_argument("-n", "--no-visual", action='store_true',
                         default=False, help="do not visualize video stream")
     parser.add_argument("-p", "--upstream-port", type=int,
                         default=8089, help="upstream port")
@@ -190,17 +190,14 @@ if __name__ == "__main__":
                 image = cv2.flip(image, 1)
             cv2.imshow(windowName, image)
 
-        k = cv2.waitKey(1) & 0xff
-        if k == ord('q') or k == 27:
-            print("Exiting...")
-            break
-        elif k == ord('r'):
-            print("Resetting move timing (%d/%d)" %
-                  (pb.move_duration, pb.move_period))
-            pb.reset_move()
-        elif k == ord('v'):
-            visualize = not visualize
-            print("Visualize = %s" % visualize)
+        if args.no_visual is False:
+            k = cv2.waitKey(1) & 0xff
+            if k == ord('q') or k == 27:
+                print("Exiting...")
+                break
+            elif k == ord('v'):
+                visualize = not visualize
+                print("Visualize = %s" % visualize)
 
         t[5] = time.time()
         if profiler:
