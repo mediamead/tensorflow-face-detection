@@ -13,9 +13,9 @@
     "RequestedWidth": 1280,
     "RequestedHeight": 720,
     "RequestedFPS": 30,
-    "EnableSmoothing": true,
+    "EnableSmoothing": false,
     "SmoothSpeed": 1.0,
-    "ShowTempCenter": true,
+    "ShowTempCenter": false,
     "ViewScaleX": 1.33,
     "ViewScaleY": 1.33
 }
