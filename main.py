@@ -131,10 +131,10 @@ if __name__ == "__main__":
     cap = cv2.VideoCapture(args.camera)
     #cap.set(cv2.CAP_PROP_FPS, args.fps)
 
- #   if args.camera_width is not None:
- #       cap.set(cv2.CV_CAP_PROP_FRAME_WIDTH, args.camera_width)
- #   if args.camera_heigth is not None:
- #       cap.set(cv2.CV_CAP_PROP_FRAME_HEIGHT, args.camera_height)
+    if args.camera_width is not None:
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, args.camera_width)
+    if args.camera_height is not None:
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, args.camera_height)
 
     print("Camera %dx%d @ %dfps" % (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)), cv2.CAP_PROP_FPS))
 
