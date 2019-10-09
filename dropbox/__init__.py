@@ -1,3 +1,11 @@
+"""
+    This script polls the directory Unity saves screenshots at,
+    reads new JPEG files,
+    rotates them,
+    uploads to Dropbox,
+    Removes the local file if upload successful.
+"""
+
 import dropbox
 import os
 import logging
@@ -7,7 +15,8 @@ import time
 import os
 
 logger = logging.getLogger('keras_mask_rcnn')
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
+
 
 class FolderSyncer():
     def read_config(self, config_file):
@@ -24,7 +33,7 @@ class FolderSyncer():
             self.connect()
         except Exception as ex:
             logger.error("connect() error: %s" % ex)
-    
+
     def connect(self):
         self.dbx = dropbox.Dropbox(self.authtoken)
         user = self.dbx.users_get_current_account()
@@ -42,7 +51,7 @@ class FolderSyncer():
                         self.connect()
                     except Exception as ex:
                         logger.error("connect() error: %s" % ex)
-                        return # not connected and cannot connect
+                        return  # not connected and cannot connect
                 try:
                     self.sync_file(os.path.join(self.dir, filename), filename)
                 except Exception as ex:
@@ -58,15 +67,17 @@ class FolderSyncer():
         img = cv2.imread(file)
         img = cv2.rotate(img, rotateCode=cv2.ROTATE_90_CLOCKWISE)
         res, jpg_img = cv2.imencode('.jpg', img)
-        response = self.dbx.files_upload(jpg_img.tobytes(), remote_file, mute=True)
+        response = self.dbx.files_upload(
+            jpg_img.tobytes(), remote_file, mute=True)
         logger.debug('uploaded: %s' % response)
 
         os.remove(file)
 
 
-TEST_AUTHTOKEN="nuL9MZ6SjMAAAAAAAAAAFIkcXRWlmzknzhbSncXo8Ove5TsjLd0MrQ0n7sn79QC7"
-TEST_CONFIG="settings.json"
-TEST_FOLDER="/LoveArRobots"
+TEST_AUTHTOKEN = "nuL9MZ6SjMAAAAAAAAAAFIkcXRWlmzknzhbSncXo8Ove5TsjLd0MrQ0n7sn79QC7"
+TEST_CONFIG = "settings.json"
+TEST_FOLDER = "/LoveArRobots"
+PERIOD = 1
 
 if __name__ == "__main__":
     logging.basicConfig()
@@ -75,4 +86,4 @@ if __name__ == "__main__":
     fs = FolderSyncer(TEST_CONFIG, TEST_AUTHTOKEN, TEST_FOLDER)
     while True:
         fs.sync_folder()
-        time.sleep(1)
+        time.sleep(PERIOD)
