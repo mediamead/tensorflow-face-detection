@@ -5,7 +5,7 @@
     "RotateUI": true,
     "RotationAngle": 90.0,
     "GlitchLetters": false,
-    "ScreenshotsPath": "",
+    "ScreenshotsPath": "/tmp",
     "ScreenshotPeriod": 2.0,
     "ScreenshotPrefix": "screenshot_",
     "MirrorHorizontal": false,
