@@ -24,6 +24,7 @@ class FolderSyncer():
         logger.debug("syncing %s into %s" % (file, remote_file))
 
         img = cv2.imread(file)
+        img = cv2.rotate(img, rotateCode=cv2.ROTATE_90_CLOCKWISE)
         res, jpg_img = cv2.imencode('.jpg', img)
         response = self.dbx.files_upload(jpg_img.tobytes(), remote_file, mute=True)
         logger.debug('uploaded: %s' % response)
