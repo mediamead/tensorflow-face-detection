@@ -4,6 +4,7 @@ import logging
 import cv2
 import json
 import time
+import os
 
 logger = logging.getLogger('keras_mask_rcnn')
 logger.setLevel(logging.DEBUG)
@@ -59,6 +60,9 @@ class FolderSyncer():
         res, jpg_img = cv2.imencode('.jpg', img)
         response = self.dbx.files_upload(jpg_img.tobytes(), remote_file, mute=True)
         logger.debug('uploaded: %s' % response)
+
+        os.remove(file)
+
 
 TEST_AUTHTOKEN="nuL9MZ6SjMAAAAAAAAAAFIkcXRWlmzknzhbSncXo8Ove5TsjLd0MrQ0n7sn79QC7"
 TEST_CONFIG="settings.json"
