@@ -3,6 +3,7 @@ import os
 import logging
 import cv2
 import json
+import time
 
 logger = logging.getLogger('keras_mask_rcnn')
 logger.setLevel(logging.DEBUG)
@@ -16,17 +17,38 @@ class FolderSyncer():
 
     def __init__(self, config_file, authtoken, folder):
         self.read_config(config_file)
-
-        self.dbx = dropbox.Dropbox(authtoken)
+        self.authtoken = authtoken
+        self.folder = folder
+        try:
+            self.connect()
+        except Exception as ex:
+            logger.error("connect() error: %s" % ex)
+    
+    def connect(self):
+        self.dbx = dropbox.Dropbox(self.authtoken)
         user = self.dbx.users_get_current_account()
         logger.info('user: %s' % user)
 
-        self.folder = folder
+    def disconnect(self):
+        self.dbx = None
 
     def sync_folder(self):
         for filename in os.listdir(self.dir):
-            if filename.endswith(".jpg"): 
-                self.sync_file(os.path.join(self.dir, filename), filename)
+            if filename.endswith(".jpg"):
+                # only sync JPG files
+                if self.dbx is None:
+                    try:
+                        self.connect()
+                    except Exception as ex:
+                        logger.error("connect() error: %s" % ex)
+                        return # not connected and cannot connect
+                try:
+                    self.sync_file(os.path.join(self.dir, filename), filename)
+                except Exception as ex:
+                    # abort this sync cycle, close connection and force reconnection for next one
+                    logger.error("sync_file() error: %s" % ex)
+                    self.disconnect()
+                    return
 
     def sync_file(self, file, fname):
         remote_file = self.folder + "/" + fname
@@ -47,4 +69,6 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.ERROR, format='%(message)s')
 
     fs = FolderSyncer(TEST_CONFIG, TEST_AUTHTOKEN, TEST_FOLDER)
-    fs.sync_folder()
+    while True:
+        fs.sync_folder()
+        time.sleep(1)
